@@ -14,31 +14,56 @@ def main(token, database_id):
 
     daily_data = []
 
+    today = datetime.today()
+
+    creation_date = datetime(today.year, today.month, today.day)
+
+    pprint(creation_date)
+
     for e in notion.databases.query(database_id).get("results"):
-        if e["object"] == "page" and reg_daily_page.match(
-            e["properties"]["Name"]["title"][0]["plain_text"]
+
+        entry_date = datetime.fromisoformat(e["properties"]["Date"]["date"]["start"])
+
+        if (
+            e["object"] == "page"
+            and reg_daily_page.match(e["properties"]["Name"]["title"][0]["plain_text"])
+            and entry_date < creation_date
         ):
             daily_data.append(
                 {
                     "id": e["id"],
-                    "date": datetime.fromisoformat(
-                        e["properties"]["Date"]["date"]["start"]
-                    ),
+                    "date": entry_date,
                     "title": e["properties"]["Name"]["title"][0]["plain_text"],
                 }
             )
 
     daily_data.sort(key=lambda e: e["date"])
 
-    pprint(daily_data)
+    # pprint(daily_data)
     # daily_data.sort(key=lambda e: e["properties"]["Date"]["date"]["start"])
 
     # 指定日(or 本日)よりも古い記事のうちで、一番新しい記事を取得する
     # タイトルも気をつけるか
 
-    creation_date = datetime.today()
+    # previous_data = list(filter(lambda e: e["date"] <= creation_date, daily_data))
 
-    # previous_data = filter(lambda e: )
+    # pprint(previous_data)
+
+    if len(daily_data) == 0:
+        return
+
+    latest = daily_data[-1]
+
+    pprint(latest)
+
+    latest_page = notion.pages.retrieve(latest["id"])
+
+    # pprint(latest_page["properties"]["Property"])
+    # pprint(latest_page)
+
+    # synced blockは、まだ未サポートかよぉ……
+    pprint(notion.blocks.children.list(latest["id"])["results"])
+    # pprint(notion.blocks.children.list(latest["id"])["results"][2])
 
 
 if __name__ == "__main__":
