@@ -22,7 +22,15 @@ def main(token, database_id):
 
     for e in notion.databases.query(database_id).get("results"):
 
+        if not "Date" in e["properties"]:
+            # pprint(e["properties"])
+            continue
+
         entry_date = datetime.fromisoformat(e["properties"]["Date"]["date"]["start"])
+
+        if not "title" in e["properties"]["Name"]:
+            # pprint(e["properties"]["Name"])
+            continue
 
         if (
             e["object"] == "page"
@@ -71,4 +79,7 @@ if __name__ == "__main__":
     token = os.environ.get("NOTION_API_TOKEN")
     database_id = os.environ.get("DATABASE_ID")
 
-    main(token, database_id)
+    if not token or not database_id:
+        print("set NOTION_API_TOKEN & DATABASE_ID")
+    else:
+        main(token, database_id)
